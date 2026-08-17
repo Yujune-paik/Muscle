@@ -1,0 +1,6 @@
+[
+  {"id":"full_body_a","name":"Full Body A","dayIndex":0,"exerciseIds":["chest_press","lat_pulldown","leg_press","seated_row","lateral_raise_machine"],"estimatedMinutes":38},
+  {"id":"full_body_b","name":"Full Body B","dayIndex":1,"exerciseIds":["incline_press","seated_row","leg_curl","shoulder_press","lat_pulldown"],"estimatedMinutes":41},
+  {"id":"full_body_c","name":"Full Body C","dayIndex":2,"exerciseIds":["pec_fly","lat_pulldown","leg_extension","reverse_fly","dumbbell_lateral_raise"],"estimatedMinutes":36}
+]
+

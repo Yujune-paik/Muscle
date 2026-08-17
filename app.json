@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "NXTSET",
+    "slug": "nxtset",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/nxtset-icon.png",
+    "scheme": "nxtset",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0A0B",
+    "ios": {
+      "icon": "./assets/images/nxtset-icon.png",
+      "bundleIdentifier": "jp.nxtset.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0B",
+        "foregroundImage": "./assets/images/nxtset-icon.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "jp.nxtset.app"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/nxtset-icon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "headers": {
+            "Cross-Origin-Embedder-Policy": "credentialless",
+            "Cross-Origin-Opener-Policy": "same-origin"
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0A0A0B",
+          "image": "./assets/images/nxtset-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-sqlite",
+      "expo-video",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,10 @@
+[
+  {"sourceId":"chest_press","candidates":[{"exerciseId":"dumbbell_press","reason":"同じ胸の押す動き","priority":1},{"exerciseId":"push_up","reason":"器具なしで胸を押す動き","priority":2}]},
+  {"sourceId":"lat_pulldown","candidates":[{"exerciseId":"cable_pulldown","reason":"同じ背中の縦に引く動き","priority":1},{"exerciseId":"one_arm_row","reason":"ダンベルで背中を鍛える","priority":2}]},
+  {"sourceId":"leg_press","candidates":[{"exerciseId":"goblet_squat","reason":"同じ脚を押す動き","priority":1},{"exerciseId":"bodyweight_squat","reason":"器具なしで脚を鍛える","priority":2}]},
+  {"sourceId":"seated_row","candidates":[{"exerciseId":"cable_row","reason":"同じ背中の引く動き","priority":1},{"exerciseId":"one_arm_row","reason":"ダンベルで背中を引く動き","priority":2}]},
+  {"sourceId":"lateral_raise_machine","candidates":[{"exerciseId":"dumbbell_lateral_raise","reason":"同じ肩の横を鍛える","priority":1},{"exerciseId":"cable_lateral_raise","reason":"同じ肩の横を鍛える","priority":2}]},
+  {"sourceId":"incline_press","candidates":[{"exerciseId":"dumbbell_press","reason":"ダンベルで胸を押す動き","priority":1},{"exerciseId":"push_up","reason":"器具なしで胸を押す動き","priority":2}]},
+  {"sourceId":"shoulder_press","candidates":[{"exerciseId":"dumbbell_lateral_raise","reason":"ダンベルで肩を鍛える","priority":1},{"exerciseId":"cable_lateral_raise","reason":"ケーブルで肩を鍛える","priority":2}]}
+]
+
