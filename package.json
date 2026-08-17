@@ -43,7 +43,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "@rolldown/binding-win32-x64-msvc": "^1.2.4",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "~29.5.14",
     "@types/react": "~19.2.2",
@@ -53,6 +52,9 @@
     "jest-expo": "^57.0.4",
     "typescript": "~6.0.3",
     "vitest": "^4.1.10"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "1.2.4"
   },
   "scripts": {
     "start": "expo start",
