@@ -36,6 +36,14 @@ describe('core components', () => {
   it('keeps exercise guidance available in reduced motion', async () => {
     jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
     await render(<ExerciseMotion exercise={exercises[0]!} failed />);
-    expect(screen.getByLabelText(/チェストプレス/)).toBeTruthy();
+    expect(screen.getAllByLabelText(/チェストプレス/).length).toBeGreaterThan(0);
+    expect(screen.getByText(exercises[0]!.altText)).toBeTruthy();
+  });
+
+  it('loads a YouTube demonstration only after the user asks for it', async () => {
+    await render(<ExerciseMotion exercise={exercises[0]!} />);
+    expect(screen.queryByTestId('mock-webview')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'チェストプレスの実演動画を見る' }));
+    expect(screen.getByTestId('mock-webview')).toBeTruthy();
   });
 });

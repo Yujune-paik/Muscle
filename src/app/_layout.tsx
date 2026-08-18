@@ -7,12 +7,14 @@ import { useEffect } from 'react';
 
 import { AppProviders } from '@/components/providers';
 import { colors } from '@/design/tokens';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { useAppStore } from '@/state/app-store';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 function NavigationRoot() {
   const hydrated = useAppStore((state) => state.hydrated);
+  const reducedMotion = useReducedMotion();
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => undefined);
   }, [hydrated]);
@@ -27,7 +29,8 @@ function NavigationRoot() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
-          animation: 'fade',
+          animation: reducedMotion ? 'none' : 'fade_from_bottom',
+          animationDuration: reducedMotion ? 0 : 200,
           title: 'NXTSET — 次の一台だけ、見ればいい。',
         }}>
         <Stack.Screen name="index" />

@@ -1,79 +1,145 @@
-import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
+import { Linking, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
 
+import { BottomSheet, InlineError, SmoothPressable } from '@/components/primitives';
+import { exerciseMediaById } from '@/content/exercise-media';
 import { colors, radii, typography } from '@/design/tokens';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import type { Exercise } from '@/types';
+import { YouTubeEmbed } from './youtube-embed';
 
 export function SkeletonMedia() {
-  const [pulse] = useState(() => new Animated.Value(0.35));
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.7, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.35, duration: 700, useNativeDriver: true }),
-      ]),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [pulse]);
-  return <Animated.View style={[styles.root, { opacity: pulse }]} />;
+  return <View accessibilityLabel="画像を読み込み中" style={[styles.root, styles.skeleton]} />;
 }
 
-export function ExerciseMotion({ exercise, failed = false }: { exercise: Exercise; failed?: boolean }) {
-  const reducedMotion = useReducedMotion();
-  const [motion] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    if (reducedMotion || failed) {
-      motion.setValue(0.45);
-      return;
-    }
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(motion, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(motion, { toValue: 0, duration: 1500, useNativeDriver: true }),
-      ]),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [failed, motion, reducedMotion]);
-
-  const armShift = motion.interpolate({ inputRange: [0, 1], outputRange: [-18, 24] });
-  const glowScale = motion.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.08] });
-
+function Pose({
+  label,
+  uri,
+  accessibilityLabel,
+  transition,
+  onError,
+}: {
+  label: string;
+  uri: string;
+  accessibilityLabel: string;
+  transition: number;
+  onError: () => void;
+}) {
   return (
-    <View
-      style={styles.root}
-      accessible
-      accessibilityRole="image"
-      accessibilityLabel={`${exercise.name}。${exercise.altText}${reducedMotion ? '。動きを減らした表示' : ''}`}>
-      <View style={styles.gridLineOne} />
-      <View style={styles.gridLineTwo} />
-      <Animated.View style={[styles.glow, { transform: [{ scale: glowScale }] }]} />
-      <View style={styles.machineFrame} />
-      <View style={styles.machineSeat} />
-      <View style={styles.person}>
-        <View style={styles.head} />
-        <View style={styles.neck} />
-        <View style={styles.torso}>
-          <View style={[styles.muscle, exercise.targetId === 'chest' && styles.muscleChest]} />
-          <View style={[styles.muscle, exercise.targetId === 'back' && styles.muscleBack]} />
-          <View style={[styles.muscle, exercise.targetId === 'shoulders' && styles.muscleShoulder]} />
-        </View>
-        <Animated.View style={[styles.arm, styles.armLeft, { transform: [{ translateX: armShift }, { rotate: '-14deg' }] }]} />
-        <Animated.View style={[styles.arm, styles.armRight, { transform: [{ translateX: armShift }, { rotate: '14deg' }] }]} />
-        <View style={styles.hips} />
-        <View style={[styles.leg, styles.legLeft, exercise.targetId === 'legs' && styles.legActive]} />
-        <View style={[styles.leg, styles.legRight, exercise.targetId === 'legs' && styles.legActive]} />
-      </View>
-      <View style={styles.captionRow}>
-        <View style={styles.liveDot} />
-        <Text style={styles.caption}>{failed ? '開始・終了姿勢' : reducedMotion ? '動きを減らして表示中' : 'LOOP PREVIEW'}</Text>
-      </View>
+    <View style={styles.pose}>
+      <Image
+        source={{ uri }}
+        accessibilityLabel={accessibilityLabel}
+        style={styles.poseImage}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        transition={transition}
+        onError={onError}
+      />
+      <View style={styles.poseLabel}><Text style={styles.poseLabelText}>{label}</Text></View>
     </View>
   );
 }
+
+export function ExerciseMedia({ exercise, failed = false }: { exercise: Exercise; failed?: boolean }) {
+  const reducedMotion = useReducedMotion();
+  const [poseFailed, setPoseFailed] = useState(failed);
+  const [youtubeOpen, setYoutubeOpen] = useState(false);
+  const [youtubeFailed, setYoutubeFailed] = useState(false);
+  const spec = exerciseMediaById[exercise.id];
+  const youtube = spec?.youtube;
+
+  return (
+    <>
+      <View style={styles.root}>
+        {spec && !poseFailed ? (
+          <View
+            style={styles.poseRow}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={`${exercise.name}。${exercise.altText}。開始姿勢と終了姿勢`}>
+            <Pose
+              label="開始"
+              uri={spec.posePair.startUri}
+              accessibilityLabel={`${exercise.name}の開始姿勢`}
+              transition={reducedMotion ? 0 : 160}
+              onError={() => setPoseFailed(true)}
+            />
+            <View style={styles.direction}>
+              <MaterialCommunityIcons name="arrow-right" size={20} color={colors.accent} />
+            </View>
+            <Pose
+              label="終了"
+              uri={spec.posePair.endUri}
+              accessibilityLabel={`${exercise.name}の終了姿勢`}
+              transition={reducedMotion ? 0 : 160}
+              onError={() => setPoseFailed(true)}
+            />
+          </View>
+        ) : (
+          <View
+            style={styles.fallback}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={`${exercise.name}。${exercise.altText}。開始姿勢と終了姿勢`}>
+            <MaterialCommunityIcons name="human-male" size={48} color={colors.textMuted} />
+            <Text style={styles.fallbackTitle}>開始・終了姿勢</Text>
+            <Text style={styles.fallbackText}>{exercise.altText}</Text>
+          </View>
+        )}
+        <View style={styles.mediaFooter}>
+          <View style={styles.sourceRow}>
+            <View style={styles.liveDot} />
+            <Text style={styles.sourceText}>実写ポーズ</Text>
+          </View>
+          {youtube ? (
+            <SmoothPressable
+              accessibilityRole="button"
+              accessibilityLabel={`${exercise.name}の実演動画を見る`}
+              onPress={() => { setYoutubeFailed(false); setYoutubeOpen(true); }}
+              style={styles.videoButton}
+              testID="exercise-video-open">
+              <MaterialCommunityIcons name="youtube" size={19} color={colors.textPrimary} />
+              <Text style={styles.videoButtonText}>実演を見る</Text>
+            </SmoothPressable>
+          ) : (
+            <Text style={styles.noVideo}>姿勢とポイントで確認</Text>
+          )}
+        </View>
+      </View>
+
+      {youtube ? (
+        <BottomSheet visible={youtubeOpen} title="動きを動画で確認" onClose={() => setYoutubeOpen(false)}>
+          {youtubeFailed ? (
+            <InlineError
+              message="動画を読み込めませんでした。開始・終了姿勢を確認してください。"
+              onRetry={() => setYoutubeFailed(false)}
+            />
+          ) : youtubeOpen ? (
+            <View style={styles.videoFrame} testID="youtube-player">
+              <YouTubeEmbed videoId={youtube.videoId} title={youtube.title} onError={() => setYoutubeFailed(true)} />
+            </View>
+          ) : null}
+          <Text style={styles.videoTitle}>{youtube.title}</Text>
+          <Text style={styles.videoMeta}>提供: {youtube.channel} · YouTube</Text>
+          <Text style={styles.videoNote}>通信環境で再生します。痛みがある場合は中止し、ジムスタッフへ確認してください。</Text>
+          <SmoothPressable
+            accessibilityRole="link"
+            onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${youtube.videoId}`)}
+            style={styles.youtubeLink}>
+            <Text style={styles.youtubeLinkText}>YouTubeで開く</Text>
+            <MaterialCommunityIcons name="open-in-new" size={16} color={colors.textSecondary} />
+          </SmoothPressable>
+        </BottomSheet>
+      ) : null}
+    </>
+  );
+}
+
+/** @deprecated Use ExerciseMedia. Kept for compatibility with older callers. */
+export const ExerciseMotion = ExerciseMedia;
 
 export function BodyMap({ muscles = ['chest', 'back', 'legs'] }: { muscles?: Exercise['targetId'][] }) {
   return (
@@ -95,39 +161,36 @@ export function BodyMap({ muscles = ['chest', 'back', 'legs'] }: { muscles?: Exe
 
 const styles = StyleSheet.create({
   root: {
-    minHeight: 330,
+    minHeight: 304,
     borderRadius: radii.media,
     overflow: 'hidden',
     backgroundColor: '#111113',
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  gridLineOne: { position: 'absolute', width: '130%', height: 1, backgroundColor: '#29292D', transform: [{ rotate: '-16deg' }] },
-  gridLineTwo: { position: 'absolute', width: 1, height: '130%', backgroundColor: '#242428', transform: [{ rotate: '24deg' }] },
-  glow: { position: 'absolute', width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(215,255,74,0.08)' },
-  machineFrame: { position: 'absolute', width: 220, height: 220, borderLeftWidth: 10, borderRightWidth: 10, borderTopWidth: 8, borderColor: '#38383D', borderRadius: 22 },
-  machineSeat: { position: 'absolute', bottom: 72, width: 94, height: 12, borderRadius: 6, backgroundColor: '#4A4A50' },
-  person: { width: 150, height: 260, alignItems: 'center', position: 'relative' },
-  head: { width: 42, height: 48, borderRadius: 21, backgroundColor: '#77777E', marginTop: 8 },
-  neck: { width: 22, height: 12, backgroundColor: '#66666D' },
-  torso: { width: 82, height: 96, borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 18, borderBottomRightRadius: 18, backgroundColor: '#58585F' },
-  muscle: { position: 'absolute', opacity: 0 },
-  muscleChest: { opacity: 1, left: 10, top: 10, width: 62, height: 30, borderRadius: 16, backgroundColor: colors.muscle },
-  muscleBack: { opacity: 1, left: 7, top: 18, width: 68, height: 48, borderRadius: 22, backgroundColor: colors.muscle },
-  muscleShoulder: { opacity: 1, left: -4, top: 6, width: 90, height: 22, borderRadius: 12, backgroundColor: colors.muscle },
-  arm: { position: 'absolute', top: 80, width: 24, height: 98, borderRadius: 14, backgroundColor: '#66666D' },
-  armLeft: { left: 16 },
-  armRight: { right: 16 },
-  hips: { width: 66, height: 30, borderRadius: 15, backgroundColor: '#4E4E54' },
-  leg: { position: 'absolute', top: 188, width: 30, height: 70, borderRadius: 16, backgroundColor: '#55555B' },
-  legLeft: { left: 38, transform: [{ rotate: '6deg' }] },
-  legRight: { right: 38, transform: [{ rotate: '-6deg' }] },
-  legActive: { backgroundColor: colors.muscle },
-  captionRow: { position: 'absolute', left: 18, bottom: 16, flexDirection: 'row', alignItems: 'center', gap: 7 },
+  skeleton: { backgroundColor: colors.surfaceRaised },
+  poseRow: { height: 246, flexDirection: 'row', alignItems: 'stretch', backgroundColor: '#F2F2F0' },
+  pose: { flex: 1, position: 'relative', backgroundColor: '#F2F2F0' },
+  poseImage: { width: '100%', height: '100%' },
+  poseLabel: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: 'rgba(10,10,11,0.82)' },
+  poseLabelText: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
+  direction: { width: 30, alignItems: 'center', justifyContent: 'center', backgroundColor: '#151516' },
+  fallback: { height: 246, padding: 28, alignItems: 'center', justifyContent: 'center' },
+  fallbackTitle: { ...typography.heading, color: colors.textPrimary, marginTop: 10 },
+  fallbackText: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginTop: 8 },
+  mediaFooter: { minHeight: 56, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent },
-  caption: { ...typography.caption, color: colors.textSecondary, letterSpacing: 1.1 },
+  sourceText: { ...typography.caption, color: colors.textSecondary, letterSpacing: 0.8 },
+  videoButton: { minHeight: 40, paddingHorizontal: 13, borderRadius: 999, backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 7 },
+  videoButtonText: { ...typography.label, color: colors.textPrimary },
+  noVideo: { ...typography.caption, color: colors.textMuted },
+  videoFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', borderRadius: radii.compact, backgroundColor: '#000000' },
+  videoTitle: { ...typography.label, color: colors.textPrimary, marginTop: 14 },
+  videoMeta: { ...typography.caption, color: colors.textSecondary, marginTop: 4 },
+  videoNote: { ...typography.caption, color: colors.textMuted, marginTop: 12 },
+  youtubeLink: { minHeight: 46, marginTop: 8, marginBottom: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  youtubeLinkText: { ...typography.label, color: colors.textSecondary },
   bodyMap: { height: 240, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   mapGlow: { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,90,95,0.08)' },
   mapPerson: { width: 120, height: 220, alignItems: 'center' },

@@ -1,12 +1,24 @@
 # Asset manifest
 
+## Exercise pose media
+
+- Start/end exercise photos: [yuhonas/free-exercise-db](https://github.com/yuhonas/free-exercise-db), Unlicense.
+- The exact per-exercise mapping is maintained in `src/content/exercise-media.ts`.
+- Images are loaded on demand and cached by `expo-image`; text guidance remains available when an image cannot load.
+
+## Supplemental exercise video
+
+- Curated YouTube demonstrations are embedded with the official player and attributed to PureGym.
+- Video IDs, titles, channel and review date are maintained in `src/content/exercise-media.ts`.
+- YouTube videos are never downloaded, modified, obscured, or used as the offline source of truth.
+
 ## Generated brand asset
 
 - `assets/images/nxtset-icon.png` — NXTSET app icon, generated with the built-in image generation tool on 2026-08-18. Prompt: “an original abstract symbol that combines an upward next-step chevron with a balanced barbell or human training posture”, using the product near-black, warm off-white, and blue-green palette. Used for the app icon, splash mark, Android adaptive icon source, and web favicon.
 
-## Exercise media
+## Future owned exercise video
 
-`ExerciseMotion` currently supplies an animated, reduced-motion-safe placeholder for every exercise. Production art should replace it without changing screen code.
+`ExerciseMedia` is designed so approved owned videos can replace the current pose pair without changing the workout screens.
 
 For each exercise ID below, provide:
 
@@ -23,8 +35,4 @@ Required IDs:
 - `leg_press`, `goblet_squat`, `bodyweight_squat`, `leg_extension`, `leg_curl`
 - `lateral_raise_machine`, `dumbbell_lateral_raise`, `cable_lateral_raise`, `shoulder_press`, `reverse_fly`
 
-Art direction: generic non-celebrity mannequin, dark neutral machine, primary target muscle in `#FF5A5F`, no manufacturer marks, and the clearest front/side/three-quarter camera angle. Content review by a qualified exercise professional is required before public release.
-
-## Code-driven
-
-- Exercise guidance visuals are drawn and animated in `src/components/media/exercise-motion.tsx`. They are original code-native placeholders, not copied imagery.
+Capture direction: one trainer, fixed camera, neutral background, full machine and joints visible, 4:3 at 720p or above, no music, one controlled repetition, and no manufacturer marks. Content review by a qualified exercise professional is required before public release.

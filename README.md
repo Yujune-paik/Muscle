@@ -2,7 +2,7 @@
 
 NXTSET is a Japanese-first, turn-by-turn gym guide for beginners. It shows one exercise at a time, records the planned values by default, asks one difficulty question per exercise, reroutes around busy equipment, and tracks only the supplemental protein serving the user controls.
 
-The default demo runs without an account, API key, or network connection after the bundle is loaded.
+The default demo runs without an account or API key. Workout data and text guidance are local-first; exercise photographs and optional YouTube demonstrations need a connection on first use.
 
 ## Requirements
 
@@ -55,6 +55,8 @@ The Playwright command expects the Expo web server on port 8081. Set `PLAYWRIGHT
 - Web: the same snapshot uses `localStorage`, avoiding Expo SQLite web's alpha-only SharedArrayBuffer requirements on generic static hosts.
 - Bundled exercise, program, and replacement data require no server.
 - Cloud failures never block local set completion.
+- Public-domain start/end photographs are cached after first load. Media failures fall back to the Japanese form cues.
+- YouTube demonstrations are loaded only after the user taps `実演を見る` and are never required to complete a workout.
 
 ## Optional Supabase cloud mode
 
@@ -86,7 +88,7 @@ npm run export:web
 npx eas-cli@latest deploy
 ```
 
-GitHub Pages is also configured in `.github/workflows/deploy-web.yml`. The workflow applies the `/Muscle` Expo base URL, checks the app, exports `dist`, and deploys on pushes to `main`. Enable GitHub Pages with **GitHub Actions** as the source in repository settings.
+GitHub Pages is also configured in `.github/workflows/deploy-web.yml`. A successful `CI` run on `main` triggers the `/Muscle` production export and deployment. Enable GitHub Pages with **GitHub Actions** as the source in repository settings.
 
 ## iOS / EAS
 
@@ -105,8 +107,8 @@ The placeholder bundle identifier is `jp.nxtset.app`; replace it if your Apple t
 ## Project map
 
 - `src/app` — Expo Router routes for onboarding, three tabs, workout, account, gym, and protein
-- `src/components` — accessible internal component system and `ExerciseMotion`
-- `src/content` — bundled Japanese exercise/program/replacement seeds
+- `src/components` — accessible internal component system and responsive `ExerciseMedia`
+- `src/content` — bundled Japanese seeds and the reviewed exercise-media manifest
 - `src/domain` — deterministic progression, replacement, program, protein, and sync logic
 - `src/state` — local-first workout/profile/protein state
 - `src/services` — optional Supabase, notification, haptic, and sync adapters
@@ -115,4 +117,3 @@ The placeholder bundle identifier is `jp.nxtset.app`; replace it if your Apple t
 - `screenshots` — required 390×844 review captures
 
 See `DECISIONS.md`, `ASSET_MANIFEST.md`, and `KNOWN_LIMITATIONS.md` before production release.
-

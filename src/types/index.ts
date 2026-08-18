@@ -32,6 +32,22 @@ export type Exercise = {
   altText: string;
 };
 
+export type ExerciseMediaSpec = {
+  posePair: {
+    startUri: string;
+    endUri: string;
+    sourceName: string;
+    sourceUrl: string;
+    license: string;
+  };
+  youtube?: {
+    videoId: string;
+    title: string;
+    channel: string;
+    reviewedAt: string;
+  };
+};
+
 export type ProgramTemplate = {
   id: string;
   name: string;
@@ -108,4 +124,3 @@ export type SyncEvent = {
   type: string;
   payload: Record<string, unknown>;
 };
-

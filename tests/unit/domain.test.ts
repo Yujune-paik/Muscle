@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { appStorage } from '@/data/storage';
+import { exerciseMediaById } from '@/content/exercise-media';
+import { exercises } from '@/content';
 import { proteinReminderAt } from '@/domain/protein';
 import { getNextPrescription } from '@/domain/progression';
 import { rankReplacements } from '@/domain/replacement';
@@ -84,3 +86,23 @@ describe('protein, sync, and units', () => {
   });
 });
 
+describe('exercise media manifest', () => {
+  it('covers every exercise with an HTTPS start and end pose', () => {
+    expect(Object.keys(exerciseMediaById).sort()).toEqual(exercises.map((exercise) => exercise.id).sort());
+    for (const entry of Object.values(exerciseMediaById)) {
+      expect(entry.posePair.startUri).toMatch(/^https:\/\//);
+      expect(entry.posePair.endUri).toMatch(/^https:\/\//);
+      expect(entry.posePair.license).toBe('Unlicense');
+    }
+  });
+
+  it('keeps curated YouTube metadata explicit and reviewable', () => {
+    const videos = Object.values(exerciseMediaById).flatMap((entry) => entry.youtube ? [entry.youtube] : []);
+    expect(videos.length).toBeGreaterThanOrEqual(15);
+    for (const video of videos) {
+      expect(video.videoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
+      expect(video.channel).toBe('PureGym');
+      expect(video.reviewedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+});

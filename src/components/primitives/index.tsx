@@ -12,11 +12,50 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radii, spacing, typography } from '@/design/tokens';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function SmoothPressable({
+  children,
+  style,
+  disabled,
+  onPressIn,
+  onPressOut,
+  ...props
+}: Omit<ComponentProps<typeof Pressable>, 'style'> & {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reducedMotion = useReducedMotion();
+  const pressed = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: 1 - pressed.value * 0.08,
+    transform: [{ scale: 1 - pressed.value * 0.012 }],
+  }));
+
+  return (
+    <AnimatedPressable
+      {...props}
+      disabled={disabled}
+      onPressIn={(event) => {
+        pressed.value = withTiming(1, { duration: reducedMotion ? 0 : 80 });
+        onPressIn?.(event);
+      }}
+      onPressOut={(event) => {
+        pressed.value = withTiming(0, { duration: reducedMotion ? 0 : 150 });
+        onPressOut?.(event);
+      }}
+      style={[style, animatedStyle]}>
+      {children}
+    </AnimatedPressable>
+  );
+}
 
 export function Screen({
   children,
@@ -29,22 +68,30 @@ export function Screen({
   contentStyle?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
+  const insets = useSafeAreaInsets();
   const content = <View style={[styles.content, contentStyle]}>{children}</View>;
+  const phone = (
+    <SafeAreaView style={[styles.phone, !scroll && styles.phoneStatic]} edges={['top', 'right', 'left']}>
+      <View style={[styles.contentFrame, { paddingBottom: Math.max(32, insets.bottom + 20) }]}>{content}</View>
+    </SafeAreaView>
+  );
   return (
     <View style={styles.canvas} testID={testID}>
-      <SafeAreaView style={styles.phone} edges={['top', 'right', 'left']}>
-        {scroll ? (
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled">
-            {content}
-          </ScrollView>
-        ) : (
-          content
-        )}
-      </SafeAreaView>
+      {scroll ? (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          accessibilityLabel="画面コンテンツ"
+          tabIndex={0}
+          showsVerticalScrollIndicator
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="never">
+          {phone}
+        </ScrollView>
+      ) : (
+        <View style={styles.staticViewport}>{phone}</View>
+      )}
     </View>
   );
 }
@@ -67,22 +114,18 @@ export function PrimaryButton({
   testID?: string;
 }) {
   return (
-    <Pressable
+    <SmoothPressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled, busy: loading }}
       disabled={disabled || loading}
       onPress={onPress}
       testID={testID}
-      style={({ pressed }) => [
-        styles.primaryButton,
-        pressed && styles.primaryPressed,
-        (disabled || loading) && styles.disabled,
-      ]}>
+      style={[styles.primaryButton, (disabled || loading) && styles.disabled]}>
       {loading ? <ActivityIndicator color={colors.onAccent} /> : null}
       {!loading && icon ? <MaterialCommunityIcons name={icon} size={22} color={colors.onAccent} /> : null}
       {!loading ? <Text style={styles.primaryLabel}>{label}</Text> : null}
-    </Pressable>
+    </SmoothPressable>
   );
 }
 
@@ -100,18 +143,17 @@ export function IconButton({
   size?: number;
 }) {
   return (
-    <Pressable
+    <SmoothPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.iconButton,
         { width: size, height: size, borderRadius: size / 2 },
         accent && styles.iconButtonAccent,
-        pressed && { opacity: 0.72 },
       ]}>
       <MaterialCommunityIcons name={icon} size={size * 0.46} color={accent ? colors.onAccent : colors.textPrimary} />
-    </Pressable>
+    </SmoothPressable>
   );
 }
 
@@ -125,13 +167,13 @@ export function PillButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <SmoothPressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ pressed }) => [styles.pill, selected && styles.pillSelected, pressed && { opacity: 0.75 }]}>
+      style={[styles.pill, selected && styles.pillSelected]}>
       <Text style={[styles.pillText, selected && styles.pillTextSelected]}>{label}</Text>
-    </Pressable>
+    </SmoothPressable>
   );
 }
 
@@ -149,16 +191,12 @@ export function SelectionCard({
   icon?: IconName;
 }) {
   return (
-    <Pressable
+    <SmoothPressable
       accessibilityRole="radio"
       accessibilityState={{ selected }}
       accessibilityLabel={subtitle ? `${title}、${subtitle}` : title}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.selectionCard,
-        selected && styles.selectionSelected,
-        pressed && { transform: [{ scale: 0.99 }] },
-      ]}>
+      style={[styles.selectionCard, selected && styles.selectionSelected]}>
       {icon ? (
         <View style={[styles.selectionIcon, selected && styles.selectionIconSelected]}>
           <MaterialCommunityIcons name={icon} size={22} color={selected ? colors.onAccent : colors.textSecondary} />
@@ -171,7 +209,7 @@ export function SelectionCard({
       <View style={[styles.radio, selected && styles.radioSelected]}>
         {selected ? <View style={styles.radioDot} /> : null}
       </View>
-    </Pressable>
+    </SmoothPressable>
   );
 }
 
@@ -236,17 +274,19 @@ export function InlineError({ message, onRetry }: { message: string; onRetry?: (
 }
 
 const styles = StyleSheet.create({
-  canvas: { flex: 1, backgroundColor: colors.canvas, alignItems: 'center' },
+  canvas: { flex: 1, width: '100%', backgroundColor: colors.canvas },
   phone: {
-    flex: 1,
+    flexGrow: 1,
     width: '100%',
     maxWidth: 430,
     backgroundColor: colors.bg,
-    ...(Platform.OS === 'web' ? { minHeight: '100vh' as never } : null),
   },
-  scroll: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
-  content: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 32 },
+  phoneStatic: { flex: 1 },
+  staticViewport: { flex: 1, width: '100%', alignItems: 'center' },
+  scroll: { flex: 1, width: '100%' },
+  scrollContent: { flexGrow: 1, alignItems: 'center' },
+  contentFrame: { flexGrow: 1, width: '100%' },
+  content: { flexGrow: 1, paddingHorizontal: 20 },
   primaryButton: {
     minHeight: 56,
     borderRadius: radii.pill,
@@ -257,7 +297,6 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 24,
   },
-  primaryPressed: { backgroundColor: colors.accentPressed, transform: [{ scale: 0.99 }] },
   primaryLabel: { ...typography.body, fontWeight: '700', color: colors.onAccent },
   disabled: { opacity: 0.42 },
   iconButton: {

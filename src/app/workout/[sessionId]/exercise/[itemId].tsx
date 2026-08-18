@@ -3,7 +3,7 @@ import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ExerciseMotion } from '@/components/media/exercise-motion';
+import { ExerciseMedia } from '@/components/media/exercise-motion';
 import { BottomSheet, IconButton, PrimaryButton, Screen, TopBar } from '@/components/primitives';
 import { MuscleLabel, PrescriptionChip, RestTimerBar, RouteProgress, SetProgress } from '@/components/workout';
 import { exerciseById } from '@/content';
@@ -64,7 +64,7 @@ export default function ActiveExerciseScreen() {
         right={<Text style={styles.setCount}>{item.completedSets}/{item.plannedSets} SETS</Text>}
       />
       <RouteProgress current={index + 1} total={session.items.length} />
-      <View style={styles.motion}><ExerciseMotion exercise={exercise} /></View>
+      <View style={styles.motion}><ExerciseMedia exercise={exercise} /></View>
       <View style={styles.exerciseCopy}>
         <Text style={styles.title}>{exercise.name}</Text>
         <MuscleLabel label={exercise.target} />
@@ -150,4 +150,3 @@ const styles = StyleSheet.create({
   sheetText: { ...typography.label, color: colors.textPrimary },
   destructiveText: { ...typography.label, color: colors.danger },
 });
-

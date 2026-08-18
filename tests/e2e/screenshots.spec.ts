@@ -2,6 +2,12 @@ import { expect, test, type Page } from '@playwright/test';
 
 async function capture(page: Page, name: string) {
   await page.evaluate(() => document.fonts.ready);
+  await page.waitForFunction(() => [...document.images]
+    .filter((image) => {
+      const rect = image.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && getComputedStyle(image).visibility !== 'hidden';
+    })
+    .every((image) => image.complete && image.naturalWidth > 0), undefined, { timeout: 10_000 });
   await page.screenshot({ path: `screenshots/${name}.png`, animations: 'disabled' });
 }
 

@@ -1,7 +1,7 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { ExerciseMotion } from '@/components/media/exercise-motion';
+import { ExerciseMedia } from '@/components/media/exercise-motion';
 import { IconButton, Screen, TopBar } from '@/components/primitives';
 import { MuscleLabel, PrescriptionChip } from '@/components/workout';
 import { exerciseById } from '@/content';
@@ -16,7 +16,7 @@ export default function ExerciseDetailScreen() {
   return (
     <Screen>
       <TopBar left={<IconButton icon="arrow-left" label="戻る" onPress={() => router.back()} />} title="種目" />
-      <ExerciseMotion exercise={exercise} />
+      <ExerciseMedia exercise={exercise} />
       <Text style={styles.title}>{exercise.name}</Text>
       <MuscleLabel label={exercise.target} />
       <View style={styles.prescriptions}>
@@ -47,4 +47,3 @@ const styles = StyleSheet.create({
   altSection: { marginTop: spacing.section, gap: 8 },
   altText: { ...typography.body, color: colors.textSecondary },
 });
-
