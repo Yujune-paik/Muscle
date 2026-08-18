@@ -4,11 +4,14 @@ import { appStorage } from '@/data/storage';
 import { exerciseMediaById } from '@/content/exercise-media';
 import { exercises } from '@/content';
 import { proteinReminderAt } from '@/domain/protein';
+import { calculateProteinPlan } from '@/domain/protein-plan';
+import { calculateMomentum } from '@/domain/momentum';
 import { getNextPrescription } from '@/domain/progression';
 import { rankReplacements } from '@/domain/replacement';
+import { calculateMuscleStimulus } from '@/domain/stimulus';
 import { dedupeSyncEvents } from '@/domain/sync';
-import { buildWorkoutItems, copyPlannedToActual, selectProgram, updateEquipmentStatus } from '@/domain/workout';
-import type { SyncEvent } from '@/types';
+import { buildWorkoutItems, copyPlannedToActual, selectPersonalizedProgram, selectProgram, updateEquipmentStatus } from '@/domain/workout';
+import type { SyncEvent, UserProfile, WorkoutSession, XpEvent } from '@/types';
 import { kgToLb, lbToKg } from '@/utils/units';
 
 describe('progression', () => {
@@ -57,6 +60,68 @@ describe('program and records', () => {
     expect(updateEquipmentStatus('unknown', 'busy')).toBe('unknown');
     expect(updateEquipmentStatus('unknown', 'absent')).toBe('absent');
     expect(updateEquipmentStatus('unknown', 'completed')).toBe('present');
+  });
+
+  it('uses the physique goal, focus and duration to build a bounded program', () => {
+    const profile: UserProfile = {
+      goal: 'v_taper', focusMuscle: 'shoulders', experience: 'some', weeklyFrequency: 3,
+      sessionDuration: 30, gymName: 'Demo Gym', bodyWeightKg: 65, heightCm: 170,
+      proteinMealCoverage: 'medium', nutritionSafetyStatus: 'standard', proteinMode: 'daily',
+      proteinGrams: 25, proteinTiming: 'post_workout',
+    };
+    const program = selectPersonalizedProgram(profile, 0);
+    expect(program.name).toContain('V-Taper');
+    expect(program.exerciseIds).toHaveLength(4);
+    expect(program.exerciseIds).toContain('lateral_raise_machine');
+  });
+});
+
+describe('science-based personalization', () => {
+  const profile: UserProfile = {
+    goal: 'lean_athletic', focusMuscle: 'chest', experience: 'first', weeklyFrequency: 3,
+    sessionDuration: 45, gymName: 'Demo Gym', bodyWeightKg: 65, heightCm: 170,
+    proteinMealCoverage: 'low', nutritionSafetyStatus: 'standard', proteinMode: 'daily',
+    proteinGrams: 25, proteinTiming: 'post_workout',
+  };
+
+  it('separates the food-inclusive protein target from supplemental servings', () => {
+    expect(calculateProteinPlan(profile)).toMatchObject({
+      actionTargetGrams: 105,
+      rangeMinGrams: 90,
+      rangeMaxGrams: 130,
+      servingGrams: 20,
+      scheduledServings: 2,
+      plannedSupplementGrams: 40,
+    });
+  });
+
+  it('does not produce a personalized protein prescription for consult status', () => {
+    expect(calculateProteinPlan({ ...profile, nutritionSafetyStatus: 'consult' })).toMatchObject({ personalized: false, actionTargetGrams: null });
+  });
+
+  it('turns completed sets into muscle-specific relative stimulus', () => {
+    const session: WorkoutSession = {
+      id: 'session-science', title: 'Test', status: 'completed', currentItemIndex: 0,
+      startedAt: '2026-08-18T01:00:00Z', completedAt: '2026-08-18T01:30:00Z', busyEquipmentIds: [], estimatedMinutes: 30,
+      items: [{
+        id: 'item-0', exerciseId: 'chest_press', status: 'completed', plannedWeight: 25, plannedReps: 10,
+        plannedSets: 3, completedSets: 3, actualWeight: 25, actualReps: 10, difficulty: 'hard', painReported: false,
+        setLogs: [1, 2, 3].map((set) => ({ id: `set-${set}`, completedAt: '2026-08-18T01:10:00Z', weight: 25, reps: 10 })),
+      }],
+    };
+    const stimulus = calculateMuscleStimulus(session, [], profile);
+    expect(stimulus.chest.score).toBeGreaterThan(stimulus.triceps.score);
+    expect(stimulus.triceps.score).toBeGreaterThan(0);
+    expect(stimulus.calves.score).toBe(0);
+  });
+
+  it('counts weekly consistency and XP without a daily streak penalty', () => {
+    const sessions = ['2026-08-17T10:00:00Z', '2026-08-18T10:00:00Z'].map((completedAt, index) => ({
+      id: `s-${index}`, title: 'Test', status: 'completed' as const, currentItemIndex: 0, items: [],
+      startedAt: completedAt, completedAt, busyEquipmentIds: [], estimatedMinutes: 30,
+    }));
+    const events: XpEvent[] = [{ id: 'xp', localDate: '2026-08-18', createdAt: '2026-08-18T10:00:00Z', type: 'workout', xp: 120, sourceId: 'workout-s-1' }];
+    expect(calculateMomentum(events, sessions, 2, new Date('2026-08-18T12:00:00Z'))).toMatchObject({ totalXp: 120, chainWeeks: 1, thisWeekWorkouts: 2 });
   });
 });
 

@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ExerciseMedia } from '@/components/media/exercise-motion';
-import { BottomSheet, IconButton, PrimaryButton, Screen, TopBar } from '@/components/primitives';
+import { BottomSheet, IconButton, PillButton, PrimaryButton, Screen, TopBar } from '@/components/primitives';
 import { MuscleLabel, PrescriptionChip, RestTimerBar, RouteProgress, SetProgress } from '@/components/workout';
 import { exerciseById } from '@/content';
 import { colors, spacing, typography } from '@/design/tokens';
 import { tapHaptic } from '@/services/haptics';
 import { useAppStore } from '@/state/app-store';
+import type { SleepBand, SorenessLevel } from '@/types';
 
 type EditKind = 'weight' | 'reps' | null;
 
@@ -23,9 +24,13 @@ export default function ActiveExerciseScreen() {
   const discardWorkout = useAppStore((state) => state.discardWorkout);
   const clearRest = useAppStore((state) => state.clearRest);
   const extendRest = useAppStore((state) => state.extendRest);
+  const setRecoveryCheck = useAppStore((state) => state.setRecoveryCheck);
   const [setActive, setSetActive] = useState(false);
   const [editing, setEditing] = useState<EditKind>(null);
   const [pauseOpen, setPauseOpen] = useState(false);
+  const [sleep, setSleep] = useState<SleepBand>('seven_plus');
+  const [soreness, setSoreness] = useState<SorenessLevel>('none');
+  const [acceptAdjustment, setAcceptAdjustment] = useState(true);
 
   if (!session || session.id !== sessionId) return <Redirect href="/(tabs)/today" />;
   const index = session.items.findIndex((entry) => entry.id === itemId);
@@ -34,6 +39,7 @@ export default function ActiveExerciseScreen() {
   if (!item || !exercise) return <Redirect href="/(tabs)/today" />;
 
   const setNumber = Math.min(item.plannedSets, item.completedSets + 1);
+  const adjustmentSuggested = sleep === 'under_6' || soreness === 'high';
   const handlePrimary = () => {
     if (!setActive) {
       clearRest();
@@ -121,6 +127,37 @@ export default function ActiveExerciseScreen() {
           <Pressable accessibilityRole="button" onPress={() => { discardWorkout(); setPauseOpen(false); router.replace('/(tabs)/today'); }} style={styles.sheetTextButton}><Text style={styles.destructiveText}>今日の記録を破棄</Text></Pressable>
         </View>
       </BottomSheet>
+
+      <BottomSheet visible={!session.recoveryCheck} title="今日のコンディション" onClose={() => undefined}>
+        <Text style={styles.recoveryIntro}>30秒で確認。短い睡眠や強い筋肉痛がある日は、今日だけ量を少し調整できます。</Text>
+        <Text style={styles.recoveryLabel}>昨夜の睡眠</Text>
+        <View style={styles.recoveryPills}>
+          <PillButton label="6時間未満" selected={sleep === 'under_6'} onPress={() => setSleep('under_6')} />
+          <PillButton label="6〜7時間" selected={sleep === 'six_to_seven'} onPress={() => setSleep('six_to_seven')} />
+          <PillButton label="7時間以上" selected={sleep === 'seven_plus'} onPress={() => setSleep('seven_plus')} />
+        </View>
+        <Text style={styles.recoveryLabel}>筋肉痛・疲労感</Text>
+        <View style={styles.recoveryPills}>
+          <PillButton label="ほぼない" selected={soreness === 'none'} onPress={() => setSoreness('none')} />
+          <PillButton label="少しある" selected={soreness === 'some'} onPress={() => setSoreness('some')} />
+          <PillButton label="強い" selected={soreness === 'high'} onPress={() => setSoreness('high')} />
+        </View>
+        {adjustmentSuggested ? (
+          <View style={styles.adjustCard}>
+            <MaterialCommunityIcons name="weather-night" size={22} color={colors.warning} />
+            <View style={{ flex: 1 }}><Text style={styles.adjustTitle}>今日は各種目を1セット減らす提案</Text><Text style={styles.adjustMeta}>重さは変えず、フォームを優先します。痛みがある動作は中止してください。</Text></View>
+          </View>
+        ) : null}
+        {adjustmentSuggested ? (
+          <View style={styles.recoveryPills}>
+            <PillButton label="提案を使う" selected={acceptAdjustment} onPress={() => setAcceptAdjustment(true)} />
+            <PillButton label="元の量で行う" selected={!acceptAdjustment} onPress={() => setAcceptAdjustment(false)} />
+          </View>
+        ) : null}
+        <View style={styles.recoveryStart}>
+          <PrimaryButton label="今日のメニューを始める" icon="arrow-right" onPress={() => setRecoveryCheck(sleep, soreness, adjustmentSuggested && acceptAdjustment)} testID="recovery-start" />
+        </View>
+      </BottomSheet>
     </Screen>
   );
 }
@@ -149,4 +186,11 @@ const styles = StyleSheet.create({
   sheetTextButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   sheetText: { ...typography.label, color: colors.textPrimary },
   destructiveText: { ...typography.label, color: colors.danger },
+  recoveryIntro: { ...typography.body, color: colors.textSecondary, marginBottom: 16 },
+  recoveryLabel: { ...typography.caption, color: colors.textMuted, marginTop: 12, marginBottom: 8 },
+  recoveryPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  adjustCard: { marginTop: 16, padding: 14, borderRadius: 16, backgroundColor: '#2A2318', borderWidth: 1, borderColor: '#4B3820', flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  adjustTitle: { ...typography.label, color: colors.textPrimary },
+  adjustMeta: { ...typography.caption, color: colors.textSecondary, marginTop: 4 },
+  recoveryStart: { marginTop: 20, marginBottom: 8 },
 });

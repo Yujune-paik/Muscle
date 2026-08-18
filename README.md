@@ -1,6 +1,6 @@
 # NXTSET
 
-NXTSET is a Japanese-first, turn-by-turn gym guide for beginners. It shows one exercise at a time, records the planned values by default, asks one difficulty question per exercise, reroutes around busy equipment, and tracks only the supplemental protein serving the user controls.
+NXTSET is a Japanese-first, turn-by-turn gym guide for beginners. It builds a goal- and body-size-aware program, shows one exercise video at a time, records each completed set, reroutes around busy equipment, and separates a food-inclusive daily protein target from supplemental servings.
 
 The default demo runs without an account or API key. Workout data and text guidance are local-first; exercise photographs and optional YouTube demonstrations need a connection on first use.
 
@@ -42,12 +42,12 @@ The Playwright command expects the Expo web server on port 8081. Set `PLAYWRIGHT
 
 ## Demo flow
 
-1. Complete the five-step onboarding.
-2. Start `Full Body A` from Today.
+1. Complete the six-step onboarding, including physique direction, body weight, and usual protein-food coverage.
+2. Start the personalized program from Today and answer the short recovery check.
 3. Tap once to start a set and once after performing it to complete the set.
 4. Answer one difficulty question after each exercise.
 5. On the second exercise, use `この器具が使えない` → `混んでいる` to test a replacement.
-6. Finish all five exercises, log the 25 g serving, and refresh. The result remains available locally.
+6. Finish all exercises, inspect the five-band muscle-stimulus heatmap and XP reward, log each planned supplemental serving, and refresh. The result remains available locally.
 
 ## Persistence and offline behavior
 
@@ -56,7 +56,8 @@ The Playwright command expects the Expo web server on port 8081. Set `PLAYWRIGHT
 - Bundled exercise, program, and replacement data require no server.
 - Cloud failures never block local set completion.
 - Public-domain start/end photographs are cached after first load. Media failures fall back to the Japanese form cues.
-- YouTube demonstrations are loaded only after the user taps `実演を見る` and are never required to complete a workout.
+- YouTube demonstrations are the primary 16:9 form guide and load only after the user taps play. Start/end photographs and Japanese cues remain available as fallbacks.
+- The persisted snapshot is versioned and migrates existing v1 users into the new body-size and nutrition baseline flow.
 
 ## Optional Supabase cloud mode
 
@@ -109,8 +110,8 @@ The placeholder bundle identifier is `jp.nxtset.app`; replace it if your Apple t
 - `src/app` — Expo Router routes for onboarding, three tabs, workout, account, gym, and protein
 - `src/components` — accessible internal component system and responsive `ExerciseMedia`
 - `src/content` — bundled Japanese seeds and the reviewed exercise-media manifest
-- `src/domain` — deterministic progression, replacement, program, protein, and sync logic
-- `src/state` — local-first workout/profile/protein state
+- `src/domain` — deterministic progression, personalized program, protein plan, weekly momentum, muscle stimulus, replacement, and sync logic
+- `src/state` — versioned local-first workout, per-set, recovery, XP, profile, and protein state
 - `src/services` — optional Supabase, notification, haptic, and sync adapters
 - `supabase` — schema, RLS policies, account deletion function, and seed data
 - `tests` — unit, component, and critical web-flow tests

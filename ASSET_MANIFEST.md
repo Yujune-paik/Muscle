@@ -6,9 +6,9 @@
 - The exact per-exercise mapping is maintained in `src/content/exercise-media.ts`.
 - Images are loaded on demand and cached by `expo-image`; text guidance remains available when an image cannot load.
 
-## Supplemental exercise video
+## Primary exercise video
 
-- Curated YouTube demonstrations are embedded with the official player and attributed to PureGym.
+- Curated YouTube demonstrations are presented as the primary 16:9 motion guide, embedded with the official player, and attributed to PureGym.
 - Video IDs, titles, channel and review date are maintained in `src/content/exercise-media.ts`.
 - YouTube videos are never downloaded, modified, obscured, or used as the offline source of truth.
 
@@ -34,5 +34,7 @@ Required IDs:
 - `lat_pulldown`, `cable_pulldown`, `assisted_pullup`, `seated_row`, `cable_row`, `one_arm_row`
 - `leg_press`, `goblet_squat`, `bodyweight_squat`, `leg_extension`, `leg_curl`
 - `lateral_raise_machine`, `dumbbell_lateral_raise`, `cable_lateral_raise`, `shoulder_press`, `reverse_fly`
+- `machine_biceps_curl`, `dumbbell_curl`, `cable_triceps_pushdown`
+- `glute_drive`, `standing_calf_raise`, `machine_crunch`
 
 Capture direction: one trainer, fixed camera, neutral background, full machine and joints visible, 4:3 at 720p or above, no music, one controlled repetition, and no manufacturer marks. Content review by a qualified exercise professional is required before public release.

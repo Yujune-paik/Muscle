@@ -11,7 +11,7 @@ export default function ScheduleScreen() {
   const updateProfile = useAppStore((state) => state.updateProfile);
   return (
     <OnboardingShell
-      step={3}
+      step={4}
       title="週に何回なら、無理なく行けそう？"
       onBack={() => router.back()}
       footer={<PrimaryButton label="次へ" onPress={() => router.push('/(onboarding)/gym')} testID="schedule-next" />}>
@@ -36,4 +36,3 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   note: { ...typography.caption, color: colors.textMuted, marginTop: 12 },
 });
-

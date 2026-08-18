@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, type Href } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { colors, typography } from '@/design/tokens';
@@ -7,6 +7,7 @@ import { useAppStore } from '@/state/app-store';
 export default function BootstrapScreen() {
   const hydrated = useAppStore((state) => state.hydrated);
   const onboardingCompleted = useAppStore((state) => state.onboardingCompleted);
+  const scienceProfilePending = useAppStore((state) => state.scienceProfilePending);
   const activeSession = useAppStore((state) => state.activeSession);
 
   if (!hydrated) {
@@ -19,6 +20,7 @@ export default function BootstrapScreen() {
   }
 
   if (!onboardingCompleted) return <Redirect href="/(onboarding)/welcome" />;
+  if (scienceProfilePending) return <Redirect href={'/(onboarding)/science-profile' as Href} />;
   if (activeSession?.status === 'completed') return <Redirect href={`/workout/${activeSession.id}/complete`} />;
   return <Redirect href="/(tabs)/today" />;
 }
@@ -28,4 +30,3 @@ const styles = StyleSheet.create({
   wordmark: { ...typography.title, color: colors.textPrimary, letterSpacing: 5 },
   loader: { marginTop: 24 },
 });
-

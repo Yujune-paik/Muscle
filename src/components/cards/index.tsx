@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BodyMap } from '@/components/media/exercise-motion';
 import { IconButton } from '@/components/primitives';
 import { colors, radii, spacing, typography } from '@/design/tokens';
 import type { Exercise } from '@/types';
@@ -12,19 +12,20 @@ export function HeroWorkoutCard({
   onPlay,
   onPress,
   resume = false,
+  imageUri,
 }: {
   title: string;
   metadata: string;
   onPlay: () => void;
   onPress: () => void;
   resume?: boolean;
+  imageUri?: string;
 }) {
   return (
     <View style={styles.hero}>
       <View style={styles.heroAura} />
-      <View style={styles.heroArtwork}>
-        <BodyMap muscles={['chest', 'back', 'legs', 'shoulders']} />
-      </View>
+      {imageUri ? <Image source={{ uri: imageUri }} accessibilityLabel={`${title} 最初の種目`} style={styles.heroArtwork} contentFit="cover" cachePolicy="memory-disk" /> : null}
+      <View style={styles.heroImageScrim} />
       <View style={styles.heroTopRow}>
         <Text style={styles.heroEyebrow}>{resume ? 'RESUME' : 'TODAY'}</Text>
         <View style={styles.heroBadge}>
@@ -84,35 +85,46 @@ export function ExerciseRow({
 }
 
 export function ProteinCard({
-  grams,
-  completed,
-  completedAt,
+  servingGrams,
+  completedServings,
+  targetServings,
+  actionTargetGrams,
+  lastCompletedAt,
   onLog,
   compact = false,
 }: {
-  grams: number;
-  completed: boolean;
-  completedAt?: string;
+  servingGrams: number;
+  completedServings: number;
+  targetServings: number;
+  actionTargetGrams: number | null;
+  lastCompletedAt?: string;
   onLog: () => void;
   compact?: boolean;
 }) {
-  const time = completedAt ? new Date(completedAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+  const completed = completedServings >= targetServings;
+  const time = lastCompletedAt ? new Date(lastCompletedAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
   return (
     <View style={[styles.protein, compact && { minHeight: 84 }]}>
       <View style={styles.proteinIcon}>
         <MaterialCommunityIcons name="cup-water" size={23} color={completed ? colors.accent : colors.textPrimary} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.proteinTitle}>{completed ? '今日は補助できました' : '今日の1杯'}</Text>
-        <Text style={styles.proteinMeta}>{completed ? `${time} に記録` : `${grams}g · トレーニング後`}</Text>
+        <Text style={styles.proteinTitle}>{targetServings === 0 ? '今日は食事を中心に' : completed ? '今日の補助プラン達成' : `次の1杯 · ${servingGrams}g`}</Text>
+        <Text style={styles.proteinMeta}>
+          {targetServings === 0
+            ? `食事込み目標${actionTargetGrams ? ` ${actionTargetGrams}g` : 'は個別確認'} · 不足時だけ補助`
+            : completed
+            ? `${completedServings}/${targetServings}杯${time ? ` · ${time}に記録` : ''}`
+            : `${completedServings}/${targetServings}杯 · 食事込み目標${actionTargetGrams ? ` ${actionTargetGrams}g` : 'は個別確認'}`}
+        </Text>
       </View>
-      {!completed ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`${grams}グラムのプロテインを飲んだ`} onPress={onLog} style={styles.proteinAction}>
+      {!completed && targetServings > 0 ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`${servingGrams}グラムのプロテインを飲んだ`} onPress={() => onLog()} style={styles.proteinAction}>
           <Text style={styles.proteinActionText}>飲んだ</Text>
         </Pressable>
-      ) : (
+      ) : targetServings > 0 ? (
         <MaterialCommunityIcons name="check-circle" size={25} color={colors.accent} />
-      )}
+      ) : <MaterialCommunityIcons name="food-apple-outline" size={25} color={colors.accent} />}
     </View>
   );
 }
@@ -172,7 +184,8 @@ const styles = StyleSheet.create({
     padding: spacing.section,
   },
   heroAura: { position: 'absolute', right: -70, top: 10, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(215,255,74,0.07)' },
-  heroArtwork: { position: 'absolute', left: 0, right: 0, bottom: 0, top: 30, alignItems: 'center', pointerEvents: 'none' },
+  heroArtwork: { position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.58 },
+  heroImageScrim: { position: 'absolute', inset: 0, backgroundColor: 'rgba(8,8,9,0.34)' },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   heroEyebrow: { ...typography.caption, color: colors.accent, letterSpacing: 1.8 },
   heroBadge: { flexDirection: 'row', gap: 7, alignItems: 'center', backgroundColor: 'rgba(10,10,11,0.62)', paddingHorizontal: 10, paddingVertical: 7, borderRadius: radii.pill },

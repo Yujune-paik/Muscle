@@ -74,7 +74,10 @@ test('scroll input works across the full viewport and all content remains reacha
   }
 
   await page.getByTestId('welcome-start').click();
-  for (const id of ['goal-next', 'experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
+  await page.getByTestId('goal-next').click();
+  await page.getByTestId('science-weight').fill('65');
+  await page.getByTestId('science-next').click();
+  for (const id of ['experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
     const action = page.getByTestId(id);
     await action.scrollIntoViewIfNeeded();
     await expect(action).toBeVisible();
@@ -83,21 +86,29 @@ test('scroll input works across the full viewport and all content remains reacha
   }
 
   await page.getByRole('button', { name: 'トレーニングを始める' }).click();
+  await page.getByTestId('recovery-start').click();
   await expect(page.getByTestId('active-exercise').filter({ visible: true })).toBeVisible();
   await expect(page.getByTestId('exercise-video-open').filter({ visible: true })).toBeVisible();
   await page.getByTestId('exercise-video-open').filter({ visible: true }).click();
   await expect(page.getByTestId('youtube-player').filter({ visible: true })).toBeVisible();
-  await expect(page.getByText(/提供: PureGym/).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/PureGym · YouTube/).filter({ visible: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   for (const path of ['/progress', '/profile', '/settings', '/help', '/account/privacy']) {
     await page.goto(path);
     await expectNoHorizontalOverflow(page);
-    const actions = page.getByRole('button').filter({ visible: true });
-    const count = await actions.count();
-    if (count > 0) {
-      await actions.nth(count - 1).scrollIntoViewIfNeeded();
-      await expect(actions.nth(count - 1)).toBeVisible();
+    const scroller = page.getByLabel('画面コンテンツ').filter({ visible: true });
+    await expect(scroller).toBeVisible();
+    const metrics = await scrollMetrics(page);
+    if (metrics && metrics.scrollHeight > metrics.clientHeight) {
+      await page.evaluate(() => {
+        const element = [...document.querySelectorAll<HTMLElement>('*')].find((candidate) => {
+          const style = getComputedStyle(candidate);
+          return (style.overflowY === 'auto' || style.overflowY === 'scroll') && candidate.scrollHeight > candidate.clientHeight;
+        });
+        element?.scrollBy({ top: element.scrollHeight, behavior: 'instant' });
+      });
+      await expect.poll(async () => (await scrollMetrics(page))?.scrollTop ?? 0).toBeGreaterThan(0);
     }
   }
 });
@@ -106,10 +117,15 @@ test('reduced motion still exposes unambiguous start and end poses', async ({ pa
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await resetOnboarding(page);
   await page.getByTestId('welcome-start').click();
-  for (const id of ['goal-next', 'experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
+  await page.getByTestId('goal-next').click();
+  await page.getByTestId('science-weight').fill('65');
+  await page.getByTestId('science-next').click();
+  for (const id of ['experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
     await page.getByTestId(id).click();
   }
   await page.getByRole('button', { name: 'トレーニングを始める' }).click();
-  await expect(page.getByText('開始').filter({ visible: true })).toBeVisible();
-  await expect(page.getByText('終了').filter({ visible: true })).toBeVisible();
+  await page.getByTestId('recovery-start').click();
+  await page.getByRole('button', { name: '開始・終了姿勢も見る' }).click();
+  await expect(page.getByText('開始', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('終了', { exact: true }).filter({ visible: true })).toBeVisible();
 });

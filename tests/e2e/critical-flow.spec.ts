@@ -20,6 +20,9 @@ test('onboarding, replacement, completion, protein, and refresh persistence', as
 
   await page.getByTestId('welcome-start').click();
   await page.getByTestId('goal-next').click();
+  await page.getByTestId('science-weight').fill('65');
+  await page.getByRole('radio', { name: /少ない/ }).click();
+  await page.getByTestId('science-next').click();
   await page.getByTestId('experience-next').click();
   await page.getByTestId('schedule-next').click();
   await page.getByTestId('gym-next').click();
@@ -28,6 +31,7 @@ test('onboarding, replacement, completion, protein, and refresh persistence', as
   await expect(page.getByText('今日も、迷わず一台ずつ。')).toBeVisible();
 
   await page.getByRole('button', { name: 'トレーニングを始める' }).click();
+  await page.getByTestId('recovery-start').click();
   await completeExercise(page, 3);
   await answerGood(page);
 
@@ -46,12 +50,53 @@ test('onboarding, replacement, completion, protein, and refresh persistence', as
   await answerGood(page);
 
   await expect(page.getByTestId('complete-screen').filter({ visible: true })).toBeVisible();
-  await page.getByRole('button', { name: /プロテインを飲んだ/ }).filter({ visible: true }).click();
+  const proteinAction = page.getByRole('button', { name: /プロテインを飲んだ/ }).filter({ visible: true });
+  await proteinAction.click();
+  await proteinAction.click();
   await page.getByRole('button', { name: 'ホームへ' }).filter({ visible: true }).click();
   await page.reload();
 
-  await expect(page.getByText('今日は補助できました')).toBeVisible();
+  await expect(page.getByText('今日の補助プラン達成')).toBeVisible();
   await page.getByText('進捗', { exact: true }).last().click();
   await expect(page.getByTestId('progress-screen').filter({ visible: true })).toBeVisible();
-  await expect(page.getByText(/種目で前進/)).toBeVisible();
+  await expect(page.getByText(/種目で次回調整/)).toBeVisible();
+});
+
+test('recovery suggestion only changes volume after explicit acceptance', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByTestId('welcome-start').click();
+  await page.getByTestId('goal-next').click();
+  await page.getByTestId('science-weight').fill('65');
+  await page.getByTestId('science-next').click();
+  for (const id of ['experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
+    await page.getByTestId(id).click();
+  }
+  await page.getByRole('button', { name: 'トレーニングを始める' }).click();
+  await page.getByRole('button', { name: '6時間未満' }).click();
+  await expect(page.getByText('今日は各種目を1セット減らす提案')).toBeVisible();
+  await page.getByTestId('recovery-start').click();
+  await expect(page.getByText('0/2 SETS')).toBeVisible();
+});
+
+test('multiple protein servings persist as plain data', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByTestId('welcome-start').click();
+  await page.getByTestId('goal-next').click();
+  await page.getByTestId('science-weight').fill('65');
+  await page.getByRole('radio', { name: /少ない/ }).click();
+  await page.getByTestId('science-next').click();
+  for (const id of ['experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
+    await page.getByTestId(id).click();
+  }
+  const proteinAction = page.getByRole('button', { name: /プロテインを飲んだ/ }).filter({ visible: true });
+  await proteinAction.click();
+  await proteinAction.click();
+  await expect(page.getByText('今日の補助プラン達成')).toBeVisible();
+  await expect(page.locator('#error-overlay')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText('今日の補助プラン達成')).toBeVisible();
 });

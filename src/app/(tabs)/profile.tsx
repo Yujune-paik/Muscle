@@ -1,10 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/primitives';
 import { colors, radii, spacing, typography } from '@/design/tokens';
+import { calculateProteinPlan } from '@/domain/protein-plan';
 import { isCloudMode } from '@/services/supabase';
 import { useAppStore } from '@/state/app-store';
 
@@ -24,6 +25,13 @@ function SettingsRow({ icon, label, value, onPress }: { icon: IconName; label: s
 export default function ProfileScreen() {
   const profile = useAppStore((state) => state.profile);
   const completedCount = useAppStore((state) => state.completedSessions.length);
+  const proteinPlan = calculateProteinPlan(profile);
+  const goalLabel = {
+    lean_athletic: 'Lean Athletic',
+    v_taper: 'V-Taper',
+    balanced_muscle: 'Balanced Muscle',
+    lower_body_athletic: 'Lower Body Athletic',
+  }[profile.goal];
   return (
     <Screen testID="profile-screen">
       <View style={styles.header}>
@@ -43,10 +51,11 @@ export default function ProfileScreen() {
       ) : null}
       <Text style={styles.sectionLabel}>プラン</Text>
       <View style={styles.list}>
-        <SettingsRow icon="target" label="現在の目標" value="Lean Athletic" onPress={() => router.push('/(onboarding)/body-goal')} />
+        <SettingsRow icon="target" label="現在の目標" value={goalLabel} onPress={() => router.push('/(onboarding)/body-goal')} />
+        <SettingsRow icon="human-male-height" label="体格と食事" value={profile.bodyWeightKg ? `${profile.bodyWeightKg}kg` : '未設定'} onPress={() => router.push('/(onboarding)/science-profile' as Href)} />
         <SettingsRow icon="calendar-blank-outline" label="頻度と時間" value={`週${profile.weeklyFrequency} · ${profile.sessionDuration}分`} onPress={() => router.push('/(onboarding)/schedule')} />
         <SettingsRow icon="map-marker-outline" label="ジム" value={profile.gymName} onPress={() => router.push('/gym')} />
-        <SettingsRow icon="cup-water" label="プロテイン" value={profile.proteinMode === 'off' ? '設定なし' : `${profile.proteinGrams}g`} onPress={() => router.push('/protein')} />
+        <SettingsRow icon="cup-water" label="プロテイン" value={profile.proteinMode === 'off' ? '設定なし' : `目標 ${proteinPlan.actionTargetGrams ?? '—'}g`} onPress={() => router.push('/protein')} />
       </View>
       <Text style={styles.sectionLabel}>設定とサポート</Text>
       <View style={styles.list}>
@@ -76,4 +85,3 @@ const styles = StyleSheet.create({
   rowValue: { ...typography.caption, color: colors.textSecondary, maxWidth: 120 },
   version: { ...typography.caption, color: colors.textMuted, marginTop: 32, textAlign: 'center' },
 });
-
