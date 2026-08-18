@@ -5,6 +5,10 @@
   {"sourceId":"seated_row","candidates":[{"exerciseId":"cable_row","reason":"同じ背中の引く動き","priority":1},{"exerciseId":"one_arm_row","reason":"ダンベルで背中を引く動き","priority":2}]},
   {"sourceId":"lateral_raise_machine","candidates":[{"exerciseId":"dumbbell_lateral_raise","reason":"同じ肩の横を鍛える","priority":1},{"exerciseId":"cable_lateral_raise","reason":"同じ肩の横を鍛える","priority":2}]},
   {"sourceId":"incline_press","candidates":[{"exerciseId":"dumbbell_press","reason":"ダンベルで胸を押す動き","priority":1},{"exerciseId":"push_up","reason":"器具なしで胸を押す動き","priority":2}]},
-  {"sourceId":"shoulder_press","candidates":[{"exerciseId":"dumbbell_lateral_raise","reason":"ダンベルで肩を鍛える","priority":1},{"exerciseId":"cable_lateral_raise","reason":"ケーブルで肩を鍛える","priority":2}]}
+  {"sourceId":"shoulder_press","candidates":[{"exerciseId":"dumbbell_lateral_raise","reason":"ダンベルで肩を鍛える","priority":1},{"exerciseId":"cable_lateral_raise","reason":"ケーブルで肩を鍛える","priority":2}]},
+  {"sourceId":"machine_biceps_curl","candidates":[{"exerciseId":"dumbbell_curl","reason":"ダンベルで同じ腕の前側を鍛える","priority":1},{"exerciseId":"cable_triceps_pushdown","reason":"ケーブルで腕を鍛える","priority":2}]},
+  {"sourceId":"cable_triceps_pushdown","candidates":[{"exerciseId":"machine_biceps_curl","reason":"マシンで腕を鍛える","priority":1},{"exerciseId":"push_up","reason":"器具なしで腕と胸を押す","priority":2}]},
+  {"sourceId":"glute_drive","candidates":[{"exerciseId":"goblet_squat","reason":"ダンベルで脚とお尻を鍛える","priority":1},{"exerciseId":"bodyweight_squat","reason":"器具なしで脚とお尻を鍛える","priority":2}]},
+  {"sourceId":"standing_calf_raise","candidates":[{"exerciseId":"leg_press","reason":"レッグプレスで脚全体を鍛える","priority":1}]},
+  {"sourceId":"machine_crunch","candidates":[{"exerciseId":"goblet_squat","reason":"体幹を保ちながら全身を鍛える","priority":1}]}
 ]
-

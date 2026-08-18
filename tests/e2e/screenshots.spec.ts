@@ -32,13 +32,17 @@ test('capture the seven required product screens', async ({ page }) => {
   await expect(page.getByTestId('welcome-start')).toBeVisible();
   await capture(page, '01-welcome');
   await page.getByTestId('welcome-start').click();
-  for (const id of ['goal-next', 'experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
+  await page.getByTestId('goal-next').click();
+  await page.getByTestId('science-weight').fill('65');
+  await page.getByTestId('science-next').click();
+  for (const id of ['experience-next', 'schedule-next', 'gym-next', 'protein-next', 'ready-finish']) {
     await page.getByTestId(id).click();
   }
 
   await expect(page.getByText('今日も、迷わず一台ずつ。')).toBeVisible();
   await capture(page, '02-today');
   await page.getByRole('button', { name: 'トレーニングを始める' }).click();
+  await page.getByTestId('recovery-start').click();
 
   await expect(page.getByTestId('set-primary').filter({ visible: true })).toBeVisible();
   await capture(page, '03-active-exercise');

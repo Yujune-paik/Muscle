@@ -21,11 +21,10 @@ export default function ExperienceScreen() {
     router.push('/(onboarding)/schedule');
   };
   return (
-    <OnboardingShell step={2} title="ジムの筋トレ経験は？" onBack={() => router.back()} footer={<PrimaryButton label="次へ" onPress={next} testID="experience-next" />}>
+    <OnboardingShell step={3} title="ジムの筋トレ経験は？" onBack={() => router.back()} footer={<PrimaryButton label="次へ" onPress={next} testID="experience-next" />}>
       {options.map((option) => (
         <SelectionCard key={option.value} title={option.title} subtitle={option.subtitle} selected={selected === option.value} onPress={() => setSelected(option.value)} />
       ))}
     </OnboardingShell>
   );
 }
-

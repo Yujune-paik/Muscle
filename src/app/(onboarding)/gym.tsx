@@ -11,7 +11,7 @@ export default function GymScreen() {
   const updateProfile = useAppStore((state) => state.updateProfile);
   return (
     <OnboardingShell
-      step={4}
+      step={5}
       title="どこでトレーニングしますか？"
       onBack={() => router.back()}
       footer={<PrimaryButton label="次へ" onPress={() => router.push('/(onboarding)/protein')} testID="gym-next" />}>
@@ -35,4 +35,3 @@ export default function GymScreen() {
 }
 
 const styles = StyleSheet.create({ note: { ...typography.caption, color: colors.textMuted, marginTop: 6 } });
-

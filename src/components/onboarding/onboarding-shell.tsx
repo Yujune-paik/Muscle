@@ -12,6 +12,7 @@ export function OnboardingShell({
   children,
   footer,
   onBack,
+  totalSteps = 6,
 }: {
   step?: number;
   title: string;
@@ -19,6 +20,7 @@ export function OnboardingShell({
   children: ReactNode;
   footer: ReactNode;
   onBack?: () => void;
+  totalSteps?: number;
 }) {
   return (
     <Screen contentStyle={styles.content}>
@@ -32,9 +34,9 @@ export function OnboardingShell({
         )}
         {step ? (
           <View style={styles.progressWrap}>
-            <Text style={styles.progressText}>{step} / 5</Text>
+            <Text style={styles.progressText}>{step} / {totalSteps}</Text>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${step * 20}%` }]} />
+              <View style={[styles.progressFill, { width: `${Math.min(100, (step / totalSteps) * 100)}%` }]} />
             </View>
           </View>
         ) : null}
@@ -63,4 +65,3 @@ const styles = StyleSheet.create({
   body: { marginTop: spacing.major, gap: spacing.related },
   footer: { marginTop: 'auto', paddingTop: spacing.major },
 });
-
